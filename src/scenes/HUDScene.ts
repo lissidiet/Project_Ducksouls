@@ -14,12 +14,17 @@ export class HUDScene extends Phaser.Scene {
   }
 
   create(): void {
+    // GameScene's create() runs before ours, so read the initial values
+    // from the registry instead of relying only on change events.
+    const health = (this.registry.get('health') as number | undefined) ?? MAX_HEALTH;
+    const souls = (this.registry.get('souls') as number | undefined) ?? 0;
+
     this.feathers = [];
     for (let i = 0; i < MAX_HEALTH; i++) {
-      this.feathers.push(this.add.image(30 + i * 28, 30, 'feather'));
+      this.feathers.push(this.add.image(30 + i * 28, 30, 'feather').setAlpha(i < health ? 1 : 0.15));
     }
 
-    this.soulsText = this.add.text(24, 50, 'Anime: 0', {
+    this.soulsText = this.add.text(24, 50, `Anime: ${souls}`, {
       fontFamily: 'Georgia, serif',
       fontSize: '20px',
       color: '#9fe8ff',

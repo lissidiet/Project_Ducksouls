@@ -1,7 +1,10 @@
 import Phaser from 'phaser';
-import { Player } from '../objects/Player';
+import { Player, MAX_HEALTH } from '../objects/Player';
+import { BaseEnemy } from '../objects/BaseEnemy';
 import { Enemy } from '../objects/Enemy';
+import { Frog } from '../objects/Frog';
 import { resetControls } from '../input/controls';
+import { loadSave, writeSave, SaveData } from '../systems/save';
 
 const LEVEL_WIDTH = 2400;
 const LEVEL_HEIGHT = 540;
@@ -9,7 +12,9 @@ const LEVEL_HEIGHT = 540;
 export class GameScene extends Phaser.Scene {
   private player!: Player;
   private enemies!: Phaser.GameObjects.Group;
-  private soulsCollected = 0;
+  private save!: SaveData;
+  private souls = 0;
+  private dead = false;
 
   constructor() {
     super('Game');
@@ -17,50 +22,56 @@ export class GameScene extends Phaser.Scene {
 
   create(): void {
     resetControls();
-    this.soulsCollected = 0;
+    this.dead = false;
+    this.save = loadSave();
+    this.souls = this.save.souls;
 
-    this.physics.world.setBounds(0, 0, LEVEL_WIDTH, LEVEL_HEIGHT);
+    // No collision on the bottom edge — falling into a pit means falling out
+    // of the world, which is how pit damage is detected.
+    this.physics.world.setBounds(0, 0, LEVEL_WIDTH, LEVEL_HEIGHT, true, true, true, false);
     this.cameras.main.setBounds(0, 0, LEVEL_WIDTH, LEVEL_HEIGHT);
 
     this.buildBackground();
     const platforms = this.buildLevel();
 
-    this.player = new Player(this, 120, 380);
+    this.player = new Player(this, this.save.benchX, this.save.benchY);
     this.enemies = this.add.group({ runChildUpdate: true });
     this.spawnEnemies();
     const souls = this.spawnSouls();
+    const benches = this.spawnBenches();
+    this.spawnCorpse();
 
     this.physics.add.collider(this.player, platforms);
     this.physics.add.collider(this.enemies, platforms);
 
     this.physics.add.overlap(this.player, this.enemies, (_p, e) => {
-      const enemy = e as Enemy;
-      if (this.player.takeDamage(enemy.x)) {
-        this.registry.set('health', this.player.health);
-        if (this.player.health <= 0) this.gameOver();
-      }
+      this.hurtPlayer((e as BaseEnemy).x);
     });
 
     this.physics.add.overlap(this.player.attackHitbox, this.enemies, (_hb, e) => {
-      (e as Enemy).takeHit(this.player.x);
+      (e as BaseEnemy).takeHit(this.player.x);
     });
 
     this.physics.add.overlap(this.player, souls, (_p, s) => {
-      const orb = s as Phaser.Physics.Arcade.Image;
-      orb.destroy();
-      this.soulsCollected += 1;
-      this.registry.set('souls', this.soulsCollected);
+      (s as Phaser.Physics.Arcade.Image).destroy();
+      this.addSouls(1);
+    });
+
+    this.physics.add.overlap(this.player, benches, (_p, b) => {
+      this.restAtBench(b as Phaser.Physics.Arcade.Image);
     });
 
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
     this.registry.set('health', this.player.health);
-    this.registry.set('souls', 0);
+    this.registry.set('souls', this.souls);
   }
 
   update(): void {
+    if (this.dead) return;
     this.player.update();
 
-    // Fell into a pit
+    // Fell into a pit: damage, then respawn at the last safe standing spot
+    // (not the bench — the bench would instantly heal the damage away)
     if (this.player.y > LEVEL_HEIGHT - 10 && this.player.health > 0) {
       if (this.player.takeDamage(this.player.x)) {
         this.registry.set('health', this.player.health);
@@ -69,10 +80,127 @@ export class GameScene extends Phaser.Scene {
           return;
         }
       }
-      this.player.setPosition(120, 380);
+      this.player.setPosition(this.player.lastGroundX, this.player.lastGroundY - 20);
       this.player.setVelocity(0, 0);
     }
   }
+
+  private hurtPlayer(fromX: number): void {
+    if (this.dead) return;
+    if (this.player.takeDamage(fromX)) {
+      this.registry.set('health', this.player.health);
+      if (this.player.health <= 0) this.gameOver();
+    }
+  }
+
+  private addSouls(amount: number): void {
+    this.souls += amount;
+    this.registry.set('souls', this.souls);
+  }
+
+  // ---- Benches (checkpoints) ----
+
+  private spawnBenches(): Phaser.Physics.Arcade.StaticGroup {
+    const benches = this.physics.add.staticGroup();
+    const spots: Array<[number, number]> = [
+      [140, 459],
+      [1850, 459],
+    ];
+    for (const [x, y] of spots) benches.create(x, y, 'bench');
+    return benches;
+  }
+
+  private restAtBench(bench: Phaser.Physics.Arcade.Image): void {
+    const movedCheckpoint = this.save.benchX !== bench.x;
+    const needsHeal = this.player.health < MAX_HEALTH;
+    const soulsToBank = this.save.souls !== this.souls;
+    if (!movedCheckpoint && !needsHeal && !soulsToBank) return;
+
+    this.player.heal();
+    this.registry.set('health', this.player.health);
+    this.save.benchX = bench.x;
+    this.save.benchY = bench.y - 60;
+    this.save.souls = this.souls;
+    writeSave(this.save);
+
+    this.showFloatingText(bench.x, bench.y - 70, 'RIPOSO', 0xffd75e);
+  }
+
+  // ---- Death & corpse run ----
+
+  private gameOver(): void {
+    this.dead = true;
+    const lostSouls = this.souls;
+    if (lostSouls > 0) {
+      this.save.corpse = {
+        x: Phaser.Math.Clamp(this.player.lastGroundX, 60, LEVEL_WIDTH - 60),
+        y: Math.min(this.player.lastGroundY, LEVEL_HEIGHT - 120),
+        souls: lostSouls,
+      };
+    }
+    this.save.souls = 0;
+    writeSave(this.save);
+    this.scene.stop('HUD');
+    this.scene.start('GameOver', { souls: lostSouls });
+  }
+
+  private spawnCorpse(): void {
+    const corpse = this.save.corpse;
+    if (!corpse) return;
+
+    const ghost = this.add.image(corpse.x, corpse.y, 'duck').setTint(0x4a3f6b).setAlpha(0.8);
+    this.tweens.add({
+      targets: ghost,
+      alpha: 0.35,
+      duration: 800,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
+    this.physics.add.existing(ghost);
+    const body = ghost.body as Phaser.Physics.Arcade.Body;
+    body.setAllowGravity(false);
+
+    this.physics.add.overlap(this.player, ghost, () => {
+      const recovered = this.save.corpse?.souls ?? 0;
+      this.save.corpse = null;
+      writeSave(this.save);
+      this.addSouls(recovered);
+      this.showFloatingText(ghost.x, ghost.y - 50, `+${recovered} anime`, 0x9fe8ff);
+
+      const particles = this.add.particles(ghost.x, ghost.y, 'particle', {
+        speed: { min: 60, max: 200 },
+        lifespan: 600,
+        quantity: 16,
+        scale: { start: 1, end: 0 },
+        tint: 0x9fe8ff,
+        emitting: false,
+      });
+      particles.explode(16);
+      this.time.delayedCall(700, () => particles.destroy());
+      ghost.destroy();
+    });
+  }
+
+  private showFloatingText(x: number, y: number, message: string, color: number): void {
+    const text = this.add
+      .text(x, y, message, {
+        fontFamily: 'Georgia, serif',
+        fontSize: '20px',
+        color: `#${color.toString(16).padStart(6, '0')}`,
+      })
+      .setOrigin(0.5);
+    this.tweens.add({
+      targets: text,
+      y: y - 40,
+      alpha: 0,
+      duration: 1200,
+      ease: 'Cubic.easeOut',
+      onComplete: () => text.destroy(),
+    });
+  }
+
+  // ---- World building ----
 
   private buildBackground(): void {
     // Distant parallax silhouettes, Hollow Knight style
@@ -117,15 +245,22 @@ export class GameScene extends Phaser.Scene {
   }
 
   private spawnEnemies(): void {
-    const spots: Array<[number, number]> = [
+    const shadeSpots: Array<[number, number]> = [
       [760, 420],
       [1300, 420],
       [1420, 260],
-      [1900, 420],
       [2150, 420],
     ];
-    for (const [x, y] of spots) {
+    for (const [x, y] of shadeSpots) {
       this.enemies.add(new Enemy(this, x, y));
+    }
+
+    const frogSpots: Array<[number, number]> = [
+      [900, 420],
+      [1980, 420],
+    ];
+    for (const [x, y] of frogSpots) {
+      this.enemies.add(new Frog(this, x, y, this.player));
     }
   }
 
@@ -152,10 +287,5 @@ export class GameScene extends Phaser.Scene {
       });
     }
     return souls;
-  }
-
-  private gameOver(): void {
-    this.scene.stop('HUD');
-    this.scene.start('GameOver', { souls: this.soulsCollected });
   }
 }

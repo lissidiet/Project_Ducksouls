@@ -25,8 +25,12 @@ export class GameOverScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
+    const subtitle =
+      this.souls > 0
+        ? `Hai perso ${this.souls} anime... giacciono dove sei caduto.`
+        : 'Le tenebre ti hanno reclamato.';
     this.add
-      .text(cx, GAME_HEIGHT * 0.5, `Anime raccolte: ${this.souls}`, {
+      .text(cx, GAME_HEIGHT * 0.5, subtitle, {
         fontFamily: 'Georgia, serif',
         fontSize: '26px',
         color: '#9fe8ff',
@@ -34,7 +38,7 @@ export class GameOverScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     this.add
-      .text(cx, GAME_HEIGHT * 0.68, 'TOCCA PER RIPROVARE', {
+      .text(cx, GAME_HEIGHT * 0.68, 'TOCCA PER RIALZARTI ALLA PANCHINA', {
         fontFamily: 'Georgia, serif',
         fontSize: '28px',
         color: '#ffd75e',

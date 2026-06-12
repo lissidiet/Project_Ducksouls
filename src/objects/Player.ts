@@ -16,6 +16,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   health = MAX_HEALTH;
   facing: 1 | -1 = 1;
   attackHitbox: Phaser.GameObjects.Image;
+  // Last safe standing spot — where the soul corpse drops if we die in a pit
+  lastGroundX = 0;
+  lastGroundY = 0;
 
   private jumpsLeft = 2;
   private lastGroundedAt = 0;
@@ -96,6 +99,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (onGround) {
       this.lastGroundedAt = now;
       this.jumpsLeft = 2;
+      this.lastGroundX = this.x;
+      this.lastGroundY = this.y - 10;
     }
 
     const dashing = now < this.dashingUntil;
@@ -161,6 +166,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.attackHitbox.setVisible(false);
       hbBody.enable = false;
     }
+  }
+
+  heal(): void {
+    this.health = MAX_HEALTH;
   }
 
   takeDamage(fromX: number): boolean {

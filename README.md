@@ -17,8 +17,14 @@ Sviluppato interamente da mobile con Claude Code.
 
 - **Mobile:** pulsanti touch a schermo — ◀ ▶ per muoversi, ⬆ salto (doppio salto incluso), ⚔ attacco, ➤ scatto
 - **Tastiera:** frecce / WASD per muoversi, SPAZIO salto, J attacco, K scatto
-- Raccogli le **anime** (orbe azzurre), evita le **ombre** o falle a pezzi
+- Raccogli le **anime** (orbe azzurre), evita le **ombre** e le **rane spinate** o falle a pezzi
 - 5 piume di vita, knockback e invulnerabilità temporanea quando vieni colpito
+- **Panchine** = checkpoint: curano, salvano la partita (localStorage) e fissano il respawn
+- Alla morte perdi le anime: torna dove sei caduto per recuperarle (**corpse run**)
+
+## Gioca subito
+
+Ogni push sul branch di sviluppo viene deployato automaticamente su **GitHub Pages** — apri l'URL del deploy dal browser del telefono e gioca.
 
 ## Avvio
 

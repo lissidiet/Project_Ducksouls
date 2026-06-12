@@ -35,14 +35,14 @@
 | Nemico | Comportamento | Stato |
 |---|---|---|
 | Ombra | Pattuglia, si gira ai bordi | ✅ implementato |
-| Rana spinata | Salta verso il giocatore | da fare |
+| Rana spinata | Salta verso il giocatore | ✅ implementato |
 | Libellula | Vola in pattern sinusoidale, picchiata | da fare |
 | Boss: Il Pescatore Annegato | Pattern a 3 fasi | da fare |
 
 ## 6. Economia
 
-- **Anime** ✅ — valuta raccolta da nemici e segreti; alla morte si perdono e si possono recuperare (corpse run, stile souls)
-- Banchi di riposo (= panchine HK) come checkpoint
+- **Anime** ✅ — valuta raccolta da nemici e segreti; alla morte si perdono e si possono recuperare (corpse run, stile souls) ✅
+- Banchi di riposo (= panchine HK) come checkpoint ✅ — curano, salvano e fissano il respawn
 
 ## 7. Controlli mobile
 
@@ -53,10 +53,11 @@
 ## 8. Roadmap tecnica
 
 - [x] Slice giocabile: movimento, combattimento, nemico, raccolta, HUD, game over
+- [x] Save/load con localStorage + panchine checkpoint + corpse run
+- [x] Deploy automatico su GitHub Pages (gioca dal browser del telefono)
 - [ ] Tilemap con Tiled per livelli veri (skill: `phaser-tilemap`)
 - [ ] Animazioni sprite del protagonista (asset via Higgsfield MCP)
 - [ ] Audio: musica ambient + SFX (skill: `phaser-audio`)
-- [ ] Save/load con localStorage (skill: `phaser-saveload`)
 - [ ] Sistema mappa e fast travel
 - [ ] Wrapper Capacitor per build iOS/Android (skill: `phaser-mobile`)
 - [ ] Primo boss
