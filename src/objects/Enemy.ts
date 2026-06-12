@@ -2,13 +2,14 @@ import { BaseEnemy } from './BaseEnemy';
 
 const PATROL_SPEED = 70;
 
-// "Ombra" — a patrolling shade blob. Turns around at walls.
+// "Ombra" — a patrolling shade blob. Turns around at walls and edges.
 export class Enemy extends BaseEnemy {
   private dir: 1 | -1 = 1;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, 'shade', 2);
-    this.setSize(40, 30).setOffset(4, 10);
+    super(scene, x, y, 'shade-0', 2, 3);
+    this.setSize(36, 26).setOffset(3, 8);
+    this.play('shade-float');
   }
 
   update(): void {

@@ -1,16 +1,25 @@
 import Phaser from 'phaser';
 
 // Shared combat behavior for all enemies: hit flash, knockback, hit-stun,
-// particle burst on death. Subclasses implement movement in update().
+// particle burst + soul reward on death. Subclasses implement movement.
 export abstract class BaseEnemy extends Phaser.Physics.Arcade.Sprite {
   health: number;
+  soulValue: number;
   protected hitStunUntil = 0;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, texture: string, health: number) {
+  constructor(
+    scene: Phaser.Scene,
+    x: number,
+    y: number,
+    texture: string,
+    health: number,
+    soulValue: number,
+  ) {
     super(scene, x, y, texture);
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.health = health;
+    this.soulValue = soulValue;
   }
 
   protected get stunned(): boolean {
@@ -27,8 +36,8 @@ export abstract class BaseEnemy extends Phaser.Physics.Arcade.Sprite {
     return false;
   }
 
-  takeHit(fromX: number): void {
-    this.health -= 1;
+  takeHit(fromX: number, damage = 1): void {
+    this.health -= damage;
     this.hitStunUntil = this.scene.time.now + 200;
     const knockDir = this.x < fromX ? -1 : 1;
     this.setVelocityX(260 * knockDir);
@@ -44,6 +53,7 @@ export abstract class BaseEnemy extends Phaser.Physics.Arcade.Sprite {
   }
 
   protected die(): void {
+    this.scene.events.emit('enemy-killed', this.soulValue, this.x, this.y);
     const particles = this.scene.add.particles(this.x, this.y, 'particle', {
       speed: { min: 60, max: 180 },
       lifespan: 500,

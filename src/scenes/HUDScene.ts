@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from '../main';
 import { controls } from '../input/controls';
-import { MAX_HEALTH } from '../objects/Player';
+import { BASE_HEALTH } from '../objects/Player';
 
 type ControlKey = 'left' | 'right' | 'jump' | 'attack' | 'dash';
 
@@ -16,13 +16,11 @@ export class HUDScene extends Phaser.Scene {
   create(): void {
     // GameScene's create() runs before ours, so read the initial values
     // from the registry instead of relying only on change events.
-    const health = (this.registry.get('health') as number | undefined) ?? MAX_HEALTH;
+    const maxHealth = (this.registry.get('maxHealth') as number | undefined) ?? BASE_HEALTH;
+    const health = (this.registry.get('health') as number | undefined) ?? maxHealth;
     const souls = (this.registry.get('souls') as number | undefined) ?? 0;
 
-    this.feathers = [];
-    for (let i = 0; i < MAX_HEALTH; i++) {
-      this.feathers.push(this.add.image(30 + i * 28, 30, 'feather').setAlpha(i < health ? 1 : 0.15));
-    }
+    this.buildFeathers(maxHealth, health);
 
     this.soulsText = this.add.text(24, 50, `Anime: ${souls}`, {
       fontFamily: 'Georgia, serif',
@@ -33,15 +31,30 @@ export class HUDScene extends Phaser.Scene {
     this.registry.events.on('changedata-health', (_: unknown, value: number) => {
       this.feathers.forEach((f, i) => f.setAlpha(i < value ? 1 : 0.15));
     });
+    this.registry.events.on('changedata-maxHealth', (_: unknown, value: number) => {
+      const current = (this.registry.get('health') as number | undefined) ?? value;
+      this.buildFeathers(value, current);
+    });
     this.registry.events.on('changedata-souls', (_: unknown, value: number) => {
       this.soulsText.setText(`Anime: ${value}`);
     });
     this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.registry.events.off('changedata-health');
+      this.registry.events.off('changedata-maxHealth');
       this.registry.events.off('changedata-souls');
     });
 
     this.createTouchControls();
+  }
+
+  private buildFeathers(maxHealth: number, health: number): void {
+    this.feathers.forEach((f) => f.destroy());
+    this.feathers = [];
+    for (let i = 0; i < maxHealth; i++) {
+      this.feathers.push(
+        this.add.image(30 + i * 28, 30, 'feather').setAlpha(i < health ? 1 : 0.15),
+      );
+    }
   }
 
   private createTouchControls(): void {

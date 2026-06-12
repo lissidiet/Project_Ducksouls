@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { Player, MAX_HEALTH } from '../objects/Player';
+import { Player } from '../objects/Player';
 import { BaseEnemy } from '../objects/BaseEnemy';
 import { Enemy } from '../objects/Enemy';
 import { Frog } from '../objects/Frog';
@@ -15,6 +15,8 @@ export class GameScene extends Phaser.Scene {
   private save!: SaveData;
   private souls = 0;
   private dead = false;
+  private benchList: Phaser.GameObjects.Image[] = [];
+  private onBench = false;
 
   constructor() {
     super('Game');
@@ -35,10 +37,12 @@ export class GameScene extends Phaser.Scene {
     const platforms = this.buildLevel();
 
     this.player = new Player(this, this.save.benchX, this.save.benchY);
+    this.player.applyStats(this.save);
+    this.player.heal();
     this.enemies = this.add.group({ runChildUpdate: true });
     this.spawnEnemies();
     const souls = this.spawnSouls();
-    const benches = this.spawnBenches();
+    this.spawnBenches();
     this.spawnCorpse();
 
     this.physics.add.collider(this.player, platforms);
@@ -49,19 +53,43 @@ export class GameScene extends Phaser.Scene {
     });
 
     this.physics.add.overlap(this.player.attackHitbox, this.enemies, (_hb, e) => {
-      (e as BaseEnemy).takeHit(this.player.x);
+      (e as BaseEnemy).takeHit(this.player.x, this.player.damage);
     });
+
+    // Killed enemies drop souls (scene event emitted by BaseEnemy.die)
+    this.events.off('enemy-killed');
+    this.events.on('enemy-killed', (value: number, x: number, y: number) => {
+      this.addSouls(value);
+      this.showFloatingText(x, y - 30, `+${value}`, 0x9fe8ff);
+    });
+
+    // Returning from the level-up menu: re-read stats, refresh the HUD
+    this.events.off(Phaser.Scenes.Events.RESUME);
+    this.events.on(
+      Phaser.Scenes.Events.RESUME,
+      (_sys: Phaser.Scenes.Systems, data?: { souls?: number }) => {
+        resetControls(); // drop any touch state held while the menu was open
+        this.scene.resume('HUD');
+        if (data?.souls !== undefined) {
+          this.souls = data.souls;
+          this.registry.set('souls', this.souls);
+        }
+        this.save = loadSave();
+        this.player.applyStats(this.save);
+        this.player.heal();
+        this.registry.set('maxHealth', this.player.maxHealth);
+        this.registry.set('health', this.player.health);
+      },
+    );
 
     this.physics.add.overlap(this.player, souls, (_p, s) => {
       (s as Phaser.Physics.Arcade.Image).destroy();
       this.addSouls(1);
     });
 
-    this.physics.add.overlap(this.player, benches, (_p, b) => {
-      this.restAtBench(b as Phaser.Physics.Arcade.Image);
-    });
 
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
+    this.registry.set('maxHealth', this.player.maxHealth);
     this.registry.set('health', this.player.health);
     this.registry.set('souls', this.souls);
   }
@@ -69,6 +97,7 @@ export class GameScene extends Phaser.Scene {
   update(): void {
     if (this.dead) return;
     this.player.update();
+    this.checkBenches();
 
     // Fell into a pit: damage, then respawn at the last safe standing spot
     // (not the bench — the bench would instantly heal the damage away)
@@ -88,6 +117,7 @@ export class GameScene extends Phaser.Scene {
   private hurtPlayer(fromX: number): void {
     if (this.dead) return;
     if (this.player.takeDamage(fromX)) {
+      this.cameras.main.shake(130, 0.012);
       this.registry.set('health', this.player.health);
       if (this.player.health <= 0) this.gameOver();
     }
@@ -100,22 +130,31 @@ export class GameScene extends Phaser.Scene {
 
   // ---- Benches (checkpoints) ----
 
-  private spawnBenches(): Phaser.Physics.Arcade.StaticGroup {
-    const benches = this.physics.add.staticGroup();
+  private spawnBenches(): void {
     const spots: Array<[number, number]> = [
       [140, 459],
       [1850, 459],
     ];
-    for (const [x, y] of spots) benches.create(x, y, 'bench');
-    return benches;
+    this.benchList = spots.map(([x, y]) => this.add.image(x, y, 'bench'));
   }
 
-  private restAtBench(bench: Phaser.Physics.Arcade.Image): void {
-    const movedCheckpoint = this.save.benchX !== bench.x;
-    const needsHeal = this.player.health < MAX_HEALTH;
-    const soulsToBank = this.save.souls !== this.souls;
-    if (!movedCheckpoint && !needsHeal && !soulsToBank) return;
+  // Edge-triggered bench detection: the menu opens once when the player
+  // ARRIVES at a bench and can't re-open until they leave and come back.
+  // (Timestamps don't work here — the scene clock freezes while paused.)
+  private checkBenches(): void {
+    const bench = this.benchList.find(
+      (b) => Math.abs(this.player.x - b.x) < 46 && Math.abs(this.player.y - b.y) < 64,
+    );
+    if (!bench) {
+      this.onBench = false;
+      return;
+    }
+    if (this.onBench || this.dead) return;
+    this.onBench = true;
+    this.restAtBench(bench);
+  }
 
+  private restAtBench(bench: Phaser.GameObjects.Image): void {
     this.player.heal();
     this.registry.set('health', this.player.health);
     this.save.benchX = bench.x;
@@ -124,6 +163,9 @@ export class GameScene extends Phaser.Scene {
     writeSave(this.save);
 
     this.showFloatingText(bench.x, bench.y - 70, 'RIPOSO', 0xffd75e);
+    this.scene.pause('HUD');
+    this.scene.pause();
+    this.scene.launch('LevelUp', { souls: this.souls });
   }
 
   // ---- Death & corpse run ----
@@ -148,7 +190,7 @@ export class GameScene extends Phaser.Scene {
     const corpse = this.save.corpse;
     if (!corpse) return;
 
-    const ghost = this.add.image(corpse.x, corpse.y, 'duck').setTint(0x4a3f6b).setAlpha(0.8);
+    const ghost = this.add.image(corpse.x, corpse.y, 'duck-idle-0').setTint(0x4a3f6b).setAlpha(0.8);
     this.tweens.add({
       targets: ghost,
       alpha: 0.35,

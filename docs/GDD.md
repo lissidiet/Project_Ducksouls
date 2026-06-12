@@ -55,8 +55,10 @@
 - [x] Slice giocabile: movimento, combattimento, nemico, raccolta, HUD, game over
 - [x] Save/load con localStorage + panchine checkpoint + corpse run
 - [x] Deploy automatico su GitHub Pages (gioca dal browser del telefono)
+- [x] Sprite pixel-art animati (matrici in `src/gfx/sprites.ts`) + juice (squash & stretch, scie dash, camera shake)
+- [x] Menu potenziamento stile Elden Ring alle panchine (Vigore / Forza / Agilità, anime dai nemici)
 - [ ] Tilemap con Tiled per livelli veri (skill: `phaser-tilemap`)
-- [ ] Animazioni sprite del protagonista (asset via Higgsfield MCP)
+- [ ] Concept art e sprite definitivi via Higgsfield MCP
 - [ ] Audio: musica ambient + SFX (skill: `phaser-audio`)
 - [ ] Sistema mappa e fast travel
 - [ ] Wrapper Capacitor per build iOS/Android (skill: `phaser-mobile`)

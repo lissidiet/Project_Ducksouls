@@ -19,8 +19,9 @@ Sviluppato interamente da mobile con Claude Code.
 - **Tastiera:** frecce / WASD per muoversi, SPAZIO salto, J attacco, K scatto
 - Raccogli le **anime** (orbe azzurre), evita le **ombre** e le **rane spinate** o falle a pezzi
 - 5 piume di vita, knockback e invulnerabilità temporanea quando vieni colpito
-- **Panchine** = checkpoint: curano, salvano la partita (localStorage) e fissano il respawn
-- Alla morte perdi le anime: torna dove sei caduto per recuperarle (**corpse run**)
+- **Panchine** = checkpoint: curano, salvano, fissano il respawn e aprono il **menu potenziamento** (Vigore / Forza / Agilità, stile Elden Ring)
+- Le anime si guadagnano da orbe e **nemici uccisi**; alla morte le perdi — torna dal tuo fantasma per recuperarle (**corpse run**)
+- Grafica pixel-art generata da codice (`src/gfx/sprites.ts`) con animazioni, squash & stretch e scie di dash
 
 ## Gioca subito
 

@@ -13,6 +13,10 @@ export interface SaveData {
   benchY: number;
   souls: number;
   corpse: CorpseData | null;
+  // Elden Ring-style stats, leveled up at benches by spending souls
+  vigor: number; // +1 max health each
+  strength: number; // +1 attack damage each
+  agility: number; // faster run, shorter dash cooldown
 }
 
 export const DEFAULT_SAVE: SaveData = {
@@ -20,7 +24,18 @@ export const DEFAULT_SAVE: SaveData = {
   benchY: 380,
   souls: 0,
   corpse: null,
+  vigor: 0,
+  strength: 0,
+  agility: 0,
 };
+
+export function totalLevel(save: SaveData): number {
+  return save.vigor + save.strength + save.agility;
+}
+
+export function nextLevelCost(save: SaveData): number {
+  return 8 + totalLevel(save) * 6;
+}
 
 export function loadSave(): SaveData {
   try {

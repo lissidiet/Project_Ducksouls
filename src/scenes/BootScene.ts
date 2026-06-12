@@ -1,77 +1,80 @@
 import Phaser from 'phaser';
+import { renderPixelTexture } from '../gfx/pixelArt';
+import {
+  DUCK_IDLE,
+  DUCK_BLINK,
+  DUCK_WALK_0,
+  DUCK_WALK_1,
+  DUCK_JUMP,
+  SHADE_0,
+  SHADE_1,
+  FROG_SIT,
+  FROG_JUMP,
+  makeStoneTile,
+} from '../gfx/sprites';
 
-// Generates all placeholder textures at runtime so the game is playable
-// with zero binary assets. Each texture will later be replaced by real art
-// (Higgsfield / hand-drawn) without touching gameplay code.
+// Generates all textures at runtime: pixel-art matrices for characters,
+// simple shapes for FX. No binary assets — art lives in src/gfx/sprites.ts.
 export class BootScene extends Phaser.Scene {
   constructor() {
     super('Boot');
   }
 
   create(): void {
-    this.makeDuckTexture();
-    this.makeEnemyTexture();
-    this.makeFrogTexture();
+    // Characters (pixel art)
+    renderPixelTexture(this, 'duck-idle-0', DUCK_IDLE);
+    renderPixelTexture(this, 'duck-idle-1', DUCK_BLINK);
+    renderPixelTexture(this, 'duck-walk-0', DUCK_WALK_0);
+    renderPixelTexture(this, 'duck-walk-1', DUCK_WALK_1);
+    renderPixelTexture(this, 'duck-jump-0', DUCK_JUMP);
+    renderPixelTexture(this, 'shade-0', SHADE_0);
+    renderPixelTexture(this, 'shade-1', SHADE_1);
+    renderPixelTexture(this, 'frog-sit', FROG_SIT);
+    renderPixelTexture(this, 'frog-jump', FROG_JUMP);
+    renderPixelTexture(this, 'platform', makeStoneTile(), 4);
+
+    // FX and UI shapes
+    this.makeRect('white', 2, 2, 0xffffff);
     this.makeBenchTexture();
-    this.makeRect('platform', 64, 64, 0x2e2e44, 0x4a4a6a);
-    this.makeRect('spike', 32, 32, 0x6b1d2a, 0x9c2b3f);
     this.makeRect('slash', 56, 40, 0xfff4c2);
     this.makeCircle('feather', 10, 0xffd75e);
     this.makeCircle('soul-orb', 8, 0x9fe8ff);
     this.makeCircle('touch-btn', 42, 0xffffff);
     this.makeParticleTexture();
 
+    this.createAnimations();
     this.scene.start('MainMenu');
   }
 
-  private makeDuckTexture(): void {
-    const g = this.add.graphics();
-    // Body
-    g.fillStyle(0xf2e6c9, 1);
-    g.fillEllipse(22, 30, 36, 28);
-    // Head
-    g.fillEllipse(34, 14, 20, 18);
-    // Beak
-    g.fillStyle(0xe8923a, 1);
-    g.fillTriangle(42, 12, 54, 16, 42, 20);
-    // Eye
-    g.fillStyle(0x1a1a24, 1);
-    g.fillCircle(36, 12, 2.5);
-    // Little knight hood (dark cloak, Hollow Knight vibes)
-    g.fillStyle(0x23233a, 1);
-    g.fillEllipse(18, 34, 28, 18);
-    g.generateTexture('duck', 56, 48);
-    g.destroy();
-  }
-
-  private makeEnemyTexture(): void {
-    const g = this.add.graphics();
-    // Shade blob enemy
-    g.fillStyle(0x2c1f3d, 1);
-    g.fillEllipse(24, 26, 44, 32);
-    g.fillStyle(0xb44dff, 1);
-    g.fillCircle(16, 22, 4);
-    g.fillCircle(32, 22, 4);
-    g.generateTexture('shade', 48, 44);
-    g.destroy();
-  }
-
-  private makeFrogTexture(): void {
-    const g = this.add.graphics();
-    // Spiked frog body
-    g.fillStyle(0x3f6b35, 1);
-    g.fillEllipse(24, 28, 40, 24);
-    // Back spikes
-    g.fillStyle(0x9cc24a, 1);
-    g.fillTriangle(10, 20, 16, 6, 22, 20);
-    g.fillTriangle(20, 20, 26, 4, 32, 20);
-    g.fillTriangle(30, 20, 36, 8, 42, 20);
-    // Eyes
-    g.fillStyle(0xd14b3a, 1);
-    g.fillCircle(14, 24, 3.5);
-    g.fillCircle(34, 24, 3.5);
-    g.generateTexture('frog', 48, 40);
-    g.destroy();
+  private createAnimations(): void {
+    this.anims.create({
+      key: 'duck-idle',
+      frames: [
+        { key: 'duck-idle-0' },
+        { key: 'duck-idle-0' },
+        { key: 'duck-idle-0' },
+        { key: 'duck-idle-1' },
+      ],
+      frameRate: 3,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: 'duck-walk',
+      frames: [{ key: 'duck-walk-0' }, { key: 'duck-idle-0' }, { key: 'duck-walk-1' }],
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: 'duck-jump',
+      frames: [{ key: 'duck-jump-0' }],
+      frameRate: 1,
+    });
+    this.anims.create({
+      key: 'shade-float',
+      frames: [{ key: 'shade-0' }, { key: 'shade-1' }],
+      frameRate: 3,
+      repeat: -1,
+    });
   }
 
   private makeBenchTexture(): void {
@@ -87,14 +90,10 @@ export class BootScene extends Phaser.Scene {
     g.destroy();
   }
 
-  private makeRect(key: string, w: number, h: number, fill: number, border?: number): void {
+  private makeRect(key: string, w: number, h: number, fill: number): void {
     const g = this.add.graphics();
     g.fillStyle(fill, 1);
     g.fillRect(0, 0, w, h);
-    if (border !== undefined) {
-      g.lineStyle(3, border, 1);
-      g.strokeRect(1, 1, w - 2, h - 2);
-    }
     g.generateTexture(key, w, h);
     g.destroy();
   }
