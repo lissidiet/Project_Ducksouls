@@ -9,37 +9,29 @@ export class MainMenuScene extends Phaser.Scene {
   create(): void {
     const cx = GAME_WIDTH / 2;
 
-    // Same painted atmosphere as the game, layered for a strong first frame.
-    this.add.image(0, 0, 'sky').setOrigin(0, 0);
-    const far = this.add.tileSprite(0, 0, GAME_WIDTH, GAME_HEIGHT, 'forest-far').setOrigin(0, 0).setAlpha(0.9);
-    const mid = this.add.tileSprite(0, 0, GAME_WIDTH, GAME_HEIGHT, 'forest-mid').setOrigin(0, 0);
-    const near = this.add.tileSprite(0, 0, GAME_WIDTH, GAME_HEIGHT, 'forest-near').setOrigin(0, 0);
-    this.add.tileSprite(0, GAME_HEIGHT - 150, GAME_WIDTH, 160, 'fog').setOrigin(0, 0);
-
-    // Slow drifting parallax to make the title screen feel alive
-    this.tweens.add({ targets: far, tilePositionX: 60, duration: 40000, repeat: -1, ease: 'Linear' });
-    this.tweens.add({ targets: mid, tilePositionX: 120, duration: 30000, repeat: -1, ease: 'Linear' });
-    this.tweens.add({ targets: near, tilePositionX: 200, duration: 22000, repeat: -1, ease: 'Linear' });
+    // Tiled top-down ground as the menu backdrop
+    this.add.tileSprite(0, 0, GAME_WIDTH, GAME_HEIGHT, 'tile-grass').setOrigin(0, 0);
+    this.add
+      .rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x0a1020, 0.45)
+      .setOrigin(0, 0);
 
     // Floating spores
-    this.add
-      .particles(0, 0, 'glow-dot', {
-        x: { min: 0, max: GAME_WIDTH },
-        y: { min: 0, max: GAME_HEIGHT },
-        lifespan: 6000,
-        speedY: { min: -16, max: -4 },
-        speedX: { min: -8, max: 8 },
-        scale: { start: 0, end: 0.5, ease: 'Sine.easeInOut' },
-        alpha: { start: 0.55, end: 0 },
-        frequency: 280,
-        blendMode: Phaser.BlendModes.ADD,
-      })
-      .setDepth(5);
+    this.add.particles(0, 0, 'glow-dot', {
+      x: { min: 0, max: GAME_WIDTH },
+      y: { min: 0, max: GAME_HEIGHT },
+      lifespan: 6000,
+      speedY: { min: -16, max: -4 },
+      speedX: { min: -8, max: 8 },
+      scale: { start: 0, end: 0.5, ease: 'Sine.easeInOut' },
+      alpha: { start: 0.5, end: 0 },
+      frequency: 300,
+      blendMode: Phaser.BlendModes.ADD,
+    });
 
-    this.add.image(0, 0, 'vignette').setOrigin(0, 0).setDepth(8);
+    this.add.image(0, 0, 'vignette').setOrigin(0, 0);
 
-    // Hero duck above the title
-    const duck = this.add.image(cx, GAME_HEIGHT * 0.24, 'duck-hero').setScale(1.15).setDepth(10);
+    // Hero
+    const duck = this.add.image(cx, GAME_HEIGHT * 0.27, 'duck-hero').setScale(1.3);
     this.tweens.add({
       targets: duck,
       y: GAME_HEIGHT * 0.27 - 10,
@@ -58,17 +50,15 @@ export class MainMenuScene extends Phaser.Scene {
         strokeThickness: 8,
         shadow: { offsetX: 0, offsetY: 0, color: '#7fd4e8', blur: 18, fill: true },
       })
-      .setOrigin(0.5)
-      .setDepth(10);
+      .setOrigin(0.5);
 
     this.add
-      .text(cx, GAME_HEIGHT * 0.66, 'Un metroidvania piumato', {
+      .text(cx, GAME_HEIGHT * 0.66, "Esplora le isole · scova la stanza del Boss", {
         fontFamily: 'Georgia, serif',
-        fontSize: '22px',
+        fontSize: '20px',
         color: '#9fe8ff',
       })
-      .setOrigin(0.5)
-      .setDepth(10);
+      .setOrigin(0.5);
 
     const start = this.add
       .text(cx, GAME_HEIGHT * 0.83, 'TOCCA PER INIZIARE', {
@@ -76,9 +66,7 @@ export class MainMenuScene extends Phaser.Scene {
         fontSize: '28px',
         color: '#ffd75e',
       })
-      .setOrigin(0.5)
-      .setDepth(10);
-
+      .setOrigin(0.5);
     this.tweens.add({ targets: start, alpha: 0.3, duration: 700, yoyo: true, repeat: -1 });
 
     this.input.once('pointerdown', () => this.startGame());
@@ -86,7 +74,7 @@ export class MainMenuScene extends Phaser.Scene {
   }
 
   private startGame(): void {
-    this.scene.start('Game');
-    this.scene.launch('HUD');
+    this.scene.start('Island', { island: 0 });
+    this.scene.launch('TopHUD');
   }
 }

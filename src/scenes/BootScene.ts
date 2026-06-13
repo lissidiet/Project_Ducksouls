@@ -1,17 +1,11 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from '../main';
 import {
-  paintFrog,
-  paintPlatform,
-  paintBench,
   paintOrb,
   paintSlash,
-  paintSky,
-  paintForestLayer,
-  paintFog,
-  paintGodray,
   paintVignette,
 } from '../gfx/paintedAssets';
+import { paintTopdownTiles } from '../gfx/topdown';
 
 // Loads binary art assets (the Higgsfield-made hero + shade sprites) and
 // paints the remaining textures at runtime onto HTML5 canvases (atmosphere,
@@ -27,25 +21,15 @@ export class BootScene extends Phaser.Scene {
   }
 
   create(): void {
-    // Characters
-    paintFrog(this);
+    // Top-down world tiles + props
+    paintTopdownTiles(this);
 
-    // World & objects
-    paintPlatform(this);
-    paintBench(this);
+    // Objects & FX
     paintOrb(this);
     paintSlash(this);
-
-    // Atmosphere (parallax + post)
-    paintSky(this, GAME_WIDTH, GAME_HEIGHT);
-    paintForestLayer(this, 'forest-far', 11, '#0c1320', 430, 14, 1.3);
-    paintForestLayer(this, 'forest-mid', 23, '#0d1626', 470, 12, 1.0);
-    paintForestLayer(this, 'forest-near', 37, '#070b13', 510, 9, 0.8);
-    paintFog(this);
-    paintGodray(this);
     paintVignette(this, GAME_WIDTH, GAME_HEIGHT);
 
-    // FX and UI helpers
+    // UI helpers
     this.makeRect('white', 2, 2, 0xffffff);
     this.makeCircle('touch-btn', 42, 0xffffff);
     this.makeParticleTexture();

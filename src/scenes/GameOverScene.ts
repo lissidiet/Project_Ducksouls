@@ -38,20 +38,18 @@ export class GameOverScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     this.add
-      .text(cx, GAME_HEIGHT * 0.68, 'TOCCA PER RIALZARTI ALLA PANCHINA', {
+      .text(cx, GAME_HEIGHT * 0.68, 'TOCCA PER RIPROVARE', {
         fontFamily: 'Georgia, serif',
         fontSize: '28px',
         color: '#ffd75e',
       })
       .setOrigin(0.5);
 
-    this.input.once('pointerdown', () => {
-      this.scene.start('Game');
-      this.scene.launch('HUD');
-    });
-    this.input.keyboard?.once('keydown', () => {
-      this.scene.start('Game');
-      this.scene.launch('HUD');
-    });
+    const restart = () => {
+      this.scene.start('Island', { island: 0 });
+      this.scene.launch('TopHUD');
+    };
+    this.input.once('pointerdown', restart);
+    this.input.keyboard?.once('keydown', restart);
   }
 }
