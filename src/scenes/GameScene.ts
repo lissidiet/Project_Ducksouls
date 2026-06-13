@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { GAME_WIDTH, GAME_HEIGHT } from '../main';
 import { Player } from '../objects/Player';
 import { BaseEnemy } from '../objects/BaseEnemy';
 import { Enemy } from '../objects/Enemy';
@@ -9,6 +10,13 @@ import { loadSave, writeSave, SaveData } from '../systems/save';
 const LEVEL_WIDTH = 2400;
 const LEVEL_HEIGHT = 540;
 
+// Each parallax layer scrolls at a fraction of the camera speed: far layers
+// barely move, near layers almost keep up — this is what sells depth.
+interface ParallaxLayer {
+  sprite: Phaser.GameObjects.TileSprite;
+  factor: number;
+}
+
 export class GameScene extends Phaser.Scene {
   private player!: Player;
   private enemies!: Phaser.GameObjects.Group;
@@ -17,6 +25,8 @@ export class GameScene extends Phaser.Scene {
   private dead = false;
   private benchList: Phaser.GameObjects.Image[] = [];
   private onBench = false;
+  private parallax: ParallaxLayer[] = [];
+  private dustEmitter?: Phaser.GameObjects.Particles.ParticleEmitter;
 
   constructor() {
     super('Game');
@@ -95,6 +105,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   update(): void {
+    this.updateParallax();
     if (this.dead) return;
     this.player.update();
     this.checkBenches();
@@ -245,18 +256,84 @@ export class GameScene extends Phaser.Scene {
   // ---- World building ----
 
   private buildBackground(): void {
-    // Distant parallax silhouettes, Hollow Knight style
-    for (let layer = 0; layer < 3; layer++) {
-      const g = this.add.graphics();
-      const shade = [0x12121f, 0x181828, 0x1f1f33][layer];
-      g.fillStyle(shade, 1);
-      const seed = layer * 7 + 3;
-      for (let x = 0; x < LEVEL_WIDTH; x += 180 + (seed * 13) % 90) {
-        const h = 120 + ((x * (seed + 2)) % 200);
-        g.fillRect(x, LEVEL_HEIGHT - h, 90 + (x % 60), h);
-      }
-      g.setScrollFactor(0.2 + layer * 0.2);
-      g.setDepth(-10 + layer);
+    // All background layers are pinned to the camera (scrollFactor 0) and
+    // scrolled manually via tilePositionX in update() — this gives seamless,
+    // infinitely-tiling parallax with no seams at the level edges.
+    const addLayer = (key: string, depth: number, factor: number): void => {
+      const sprite = this.add
+        .tileSprite(0, 0, GAME_WIDTH, GAME_HEIGHT, key)
+        .setOrigin(0, 0)
+        .setScrollFactor(0)
+        .setDepth(depth);
+      this.parallax.push({ sprite, factor });
+    };
+
+    // Static sky gradient with moon + stars
+    this.add.image(0, 0, 'sky').setOrigin(0, 0).setScrollFactor(0).setDepth(-30);
+
+    addLayer('forest-far', -25, 0.15);
+    addLayer('forest-mid', -22, 0.35);
+    addLayer('forest-near', -19, 0.6);
+
+    // Drifting god-rays from the moon side
+    for (const [x, alpha] of [
+      [GAME_WIDTH * 0.62, 0.5],
+      [GAME_WIDTH * 0.78, 0.35],
+    ] as Array<[number, number]>) {
+      const ray = this.add
+        .image(x, -40, 'godray')
+        .setOrigin(0.5, 0)
+        .setScrollFactor(0.1)
+        .setDepth(-16)
+        .setAlpha(alpha)
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setAngle(8);
+      this.tweens.add({
+        targets: ray,
+        alpha: alpha * 0.4,
+        duration: 4000 + x,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+    }
+
+    // Low-lying fog band drifting near the ground
+    const fog = this.add
+      .tileSprite(0, GAME_HEIGHT - 150, GAME_WIDTH, 160, 'fog')
+      .setOrigin(0, 0)
+      .setScrollFactor(0)
+      .setDepth(-12);
+    this.parallax.push({ sprite: fog, factor: 0.45 });
+
+    // Vignette over the whole gameplay (HUD scene still draws on top)
+    this.add
+      .image(0, 0, 'vignette')
+      .setOrigin(0, 0)
+      .setScrollFactor(0)
+      .setDepth(50);
+
+    // Floating ambient motes / spores drifting through the world (Ori dust).
+    // Scale ramps from 0 so they fade in softly; alpha eases out on death.
+    this.dustEmitter = this.add.particles(0, 0, 'glow-dot', {
+      x: { min: 0, max: GAME_WIDTH },
+      y: { min: 0, max: GAME_HEIGHT },
+      lifespan: 6000,
+      speedX: { min: -8, max: 8 },
+      speedY: { min: -16, max: -4 },
+      scale: { start: 0, end: 0.5, ease: 'Sine.easeInOut' },
+      alpha: { start: 0.55, end: 0 },
+      frequency: 320,
+      quantity: 1,
+      blendMode: Phaser.BlendModes.ADD,
+    });
+    this.dustEmitter.setScrollFactor(0.4).setDepth(-10);
+  }
+
+  private updateParallax(): void {
+    const scrollX = this.cameras.main.scrollX;
+    for (const layer of this.parallax) {
+      layer.sprite.tilePositionX = scrollX * layer.factor;
     }
   }
 

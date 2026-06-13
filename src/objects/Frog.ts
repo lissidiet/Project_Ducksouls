@@ -11,7 +11,7 @@ export class Frog extends BaseEnemy {
 
   constructor(scene: Phaser.Scene, x: number, y: number, target: Phaser.GameObjects.Sprite) {
     super(scene, x, y, 'frog-sit', 2, 4);
-    this.setSize(34, 22).setOffset(4, 8);
+    this.setSize(40, 26).setOffset(10, 16);
     this.target = target;
   }
 

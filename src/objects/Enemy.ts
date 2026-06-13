@@ -8,7 +8,7 @@ export class Enemy extends BaseEnemy {
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, 'shade-0', 2, 3);
-    this.setSize(36, 26).setOffset(3, 8);
+    this.setSize(40, 34).setOffset(12, 9);
     this.play('shade-float');
   }
 

@@ -54,7 +54,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
-    this.setSize(32, 36).setOffset(8, 5);
+    // Body kept horizontally centered in the 76px-wide frame so flipX
+    // (facing left) doesn't shift the hitbox off the visible duck.
+    this.setSize(40, 44).setOffset(18, 12);
     this.setCollideWorldBounds(true);
     this.play('duck-idle');
 

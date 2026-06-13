@@ -21,7 +21,7 @@ Sviluppato interamente da mobile con Claude Code.
 - 5 piume di vita, knockback e invulnerabilità temporanea quando vieni colpito
 - **Panchine** = checkpoint: curano, salvano, fissano il respawn e aprono il **menu potenziamento** (Vigore / Forza / Agilità, stile Elden Ring)
 - Le anime si guadagnano da orbe e **nemici uccisi**; alla morte le perdi — torna dal tuo fantasma per recuperarle (**corpse run**)
-- Grafica pixel-art generata da codice (`src/gfx/sprites.ts`) con animazioni, squash & stretch e scie di dash
+- Grafica **pittorica** generata da codice (stile Ori/Dust): personaggi morbidi dipinti su canvas, mondo notturno con parallasse a più livelli, nebbia, raggi di luna, vignettatura e spore fluttuanti (`src/gfx/painterly.ts`)
 
 ## Gioca subito
 

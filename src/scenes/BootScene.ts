@@ -1,44 +1,51 @@
 import Phaser from 'phaser';
-import { renderPixelTexture } from '../gfx/pixelArt';
+import { GAME_WIDTH, GAME_HEIGHT } from '../main';
 import {
-  DUCK_IDLE,
-  DUCK_BLINK,
-  DUCK_WALK_0,
-  DUCK_WALK_1,
-  DUCK_JUMP,
-  SHADE_0,
-  SHADE_1,
-  FROG_SIT,
-  FROG_JUMP,
-  makeStoneTile,
-} from '../gfx/sprites';
+  paintDuckFrames,
+  paintShade,
+  paintFrog,
+  paintPlatform,
+  paintBench,
+  paintOrb,
+  paintSlash,
+  paintSky,
+  paintForestLayer,
+  paintFog,
+  paintGodray,
+  paintVignette,
+} from '../gfx/paintedAssets';
 
-// Generates all textures at runtime: pixel-art matrices for characters,
-// simple shapes for FX. No binary assets — art lives in src/gfx/sprites.ts.
+// Paints every texture at runtime onto HTML5 canvases (gradients, glow,
+// soft shapes — Ori / Dust look). No binary assets: art lives in
+// src/gfx/paintedAssets.ts.
 export class BootScene extends Phaser.Scene {
   constructor() {
     super('Boot');
   }
 
   create(): void {
-    // Characters (pixel art)
-    renderPixelTexture(this, 'duck-idle-0', DUCK_IDLE);
-    renderPixelTexture(this, 'duck-idle-1', DUCK_BLINK);
-    renderPixelTexture(this, 'duck-walk-0', DUCK_WALK_0);
-    renderPixelTexture(this, 'duck-walk-1', DUCK_WALK_1);
-    renderPixelTexture(this, 'duck-jump-0', DUCK_JUMP);
-    renderPixelTexture(this, 'shade-0', SHADE_0);
-    renderPixelTexture(this, 'shade-1', SHADE_1);
-    renderPixelTexture(this, 'frog-sit', FROG_SIT);
-    renderPixelTexture(this, 'frog-jump', FROG_JUMP);
-    renderPixelTexture(this, 'platform', makeStoneTile(), 4);
+    // Characters
+    paintDuckFrames(this);
+    paintShade(this);
+    paintFrog(this);
 
-    // FX and UI shapes
+    // World & objects
+    paintPlatform(this);
+    paintBench(this);
+    paintOrb(this);
+    paintSlash(this);
+
+    // Atmosphere (parallax + post)
+    paintSky(this, GAME_WIDTH, GAME_HEIGHT);
+    paintForestLayer(this, 'forest-far', 11, '#101a2e', 430, 14, 1.3);
+    paintForestLayer(this, 'forest-mid', 23, '#15233d', 470, 12, 1.0);
+    paintForestLayer(this, 'forest-near', 37, '#0d1626', 510, 9, 0.8);
+    paintFog(this);
+    paintGodray(this);
+    paintVignette(this, GAME_WIDTH, GAME_HEIGHT);
+
+    // FX and UI helpers
     this.makeRect('white', 2, 2, 0xffffff);
-    this.makeBenchTexture();
-    this.makeRect('slash', 56, 40, 0xfff4c2);
-    this.makeCircle('feather', 10, 0xffd75e);
-    this.makeCircle('soul-orb', 8, 0x9fe8ff);
     this.makeCircle('touch-btn', 42, 0xffffff);
     this.makeParticleTexture();
 
@@ -47,47 +54,20 @@ export class BootScene extends Phaser.Scene {
   }
 
   private createAnimations(): void {
-    this.anims.create({
-      key: 'duck-idle',
-      frames: [
-        { key: 'duck-idle-0' },
-        { key: 'duck-idle-0' },
-        { key: 'duck-idle-0' },
-        { key: 'duck-idle-1' },
-      ],
-      frameRate: 3,
-      repeat: -1,
-    });
+    this.anims.create({ key: 'duck-idle', frames: [{ key: 'duck-idle-0' }], frameRate: 1 });
     this.anims.create({
       key: 'duck-walk',
-      frames: [{ key: 'duck-walk-0' }, { key: 'duck-idle-0' }, { key: 'duck-walk-1' }],
-      frameRate: 10,
+      frames: [
+        { key: 'duck-walk-0' },
+        { key: 'duck-idle-0' },
+        { key: 'duck-walk-1' },
+        { key: 'duck-idle-0' },
+      ],
+      frameRate: 9,
       repeat: -1,
     });
-    this.anims.create({
-      key: 'duck-jump',
-      frames: [{ key: 'duck-jump-0' }],
-      frameRate: 1,
-    });
-    this.anims.create({
-      key: 'shade-float',
-      frames: [{ key: 'shade-0' }, { key: 'shade-1' }],
-      frameRate: 3,
-      repeat: -1,
-    });
-  }
-
-  private makeBenchTexture(): void {
-    const g = this.add.graphics();
-    // Wooden bench (the resting checkpoint, Hollow Knight style)
-    g.fillStyle(0x5a4632, 1);
-    g.fillRect(4, 12, 48, 8);
-    g.fillRect(8, 20, 6, 14);
-    g.fillRect(42, 20, 6, 14);
-    g.fillStyle(0x8a6d4a, 1);
-    g.fillRect(4, 12, 48, 3);
-    g.generateTexture('bench', 56, 34);
-    g.destroy();
+    this.anims.create({ key: 'duck-jump', frames: [{ key: 'duck-jump-0' }], frameRate: 1 });
+    this.anims.create({ key: 'shade-float', frames: [{ key: 'shade-0' }], frameRate: 1 });
   }
 
   private makeRect(key: string, w: number, h: number, fill: number): void {
