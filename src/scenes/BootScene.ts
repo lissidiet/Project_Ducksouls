@@ -1,7 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from '../main';
 import {
-  paintDuckFrames,
   paintShade,
   paintFrog,
   paintPlatform,
@@ -15,17 +14,20 @@ import {
   paintVignette,
 } from '../gfx/paintedAssets';
 
-// Paints every texture at runtime onto HTML5 canvases (gradients, glow,
-// soft shapes — Ori / Dust look). No binary assets: art lives in
-// src/gfx/paintedAssets.ts.
+// Loads binary art assets (the Higgsfield-made hero sprite) and paints the
+// remaining textures at runtime onto HTML5 canvases (atmosphere, enemies,
+// world). The hero is real AI art; everything else is still procedural.
 export class BootScene extends Phaser.Scene {
   constructor() {
     super('Boot');
   }
 
+  preload(): void {
+    this.load.image('duck-hero', 'assets/duck-hero.png');
+  }
+
   create(): void {
     // Characters
-    paintDuckFrames(this);
     paintShade(this);
     paintFrog(this);
 
@@ -54,19 +56,6 @@ export class BootScene extends Phaser.Scene {
   }
 
   private createAnimations(): void {
-    this.anims.create({ key: 'duck-idle', frames: [{ key: 'duck-idle-0' }], frameRate: 1 });
-    this.anims.create({
-      key: 'duck-walk',
-      frames: [
-        { key: 'duck-walk-0' },
-        { key: 'duck-idle-0' },
-        { key: 'duck-walk-1' },
-        { key: 'duck-idle-0' },
-      ],
-      frameRate: 9,
-      repeat: -1,
-    });
-    this.anims.create({ key: 'duck-jump', frames: [{ key: 'duck-jump-0' }], frameRate: 1 });
     this.anims.create({ key: 'shade-float', frames: [{ key: 'shade-0' }], frameRate: 1 });
   }
 

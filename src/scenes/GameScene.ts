@@ -201,7 +201,7 @@ export class GameScene extends Phaser.Scene {
     const corpse = this.save.corpse;
     if (!corpse) return;
 
-    const ghost = this.add.image(corpse.x, corpse.y, 'duck-idle-0').setTint(0x4a3f6b).setAlpha(0.8);
+    const ghost = this.add.image(corpse.x, corpse.y, 'duck-hero').setTint(0x6f7fb0).setAlpha(0.7);
     this.tweens.add({
       targets: ghost,
       alpha: 0.35,

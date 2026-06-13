@@ -38,6 +38,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private prevOnGround = false;
   private lastFallSpeed = 0;
   private nextGhostAt = 0;
+  private landSquashUntil = 0;
   private keys!: {
     left: Phaser.Input.Keyboard.Key;
     right: Phaser.Input.Keyboard.Key;
@@ -50,15 +51,15 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   };
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, 'duck-idle-0');
+    super(scene, x, y, 'duck-hero'); // 67x104 Higgsfield sprite
+
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
-    // Body kept horizontally centered in the 76px-wide frame so flipX
+    // Body kept horizontally centered in the 67px-wide frame so flipX
     // (facing left) doesn't shift the hitbox off the visible duck.
-    this.setSize(40, 44).setOffset(18, 12);
+    this.setSize(40, 86).setOffset(13, 14);
     this.setCollideWorldBounds(true);
-    this.play('duck-idle');
 
     this.attackHitbox = scene.add.image(x, y, 'slash').setVisible(false);
     scene.physics.add.existing(this.attackHitbox);
@@ -118,7 +119,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (!onGround) {
       this.lastFallSpeed = body.velocity.y;
     } else {
-      if (!this.prevOnGround && this.lastFallSpeed > 380) this.landSquash();
+      if (!this.prevOnGround && this.lastFallSpeed > 380) this.landImpact();
       this.lastGroundedAt = now;
       this.jumpsLeft = 2;
       this.lastGroundX = this.x;
@@ -147,7 +148,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         if (!onGround && !canCoyoteJump) this.jumpsLeft -= 1;
         else this.jumpsLeft = 1;
         this.setVelocityY(JUMP_VELOCITY);
-        this.jumpStretch();
       }
 
       if (dashJustPressed && now >= this.dashReadyAt) {
@@ -161,7 +161,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       if (attackJustPressed && now >= this.attackReadyAt) {
         this.attackingUntil = now + ATTACK_DURATION;
         this.attackReadyAt = now + ATTACK_COOLDOWN;
-        this.attackLunge();
       }
     } else {
       // Keep dash velocity flat through the whole dash + leave afterimages
@@ -174,34 +173,77 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     if (!dashing && !body.allowGravity) {
       body.setAllowGravity(true);
-      this.setAlpha(this.isInvulnerable ? this.alpha : 1);
     }
-
-    // Animation state
-    if (!onGround) this.play('duck-jump', true);
-    else if (moving) this.play('duck-walk', true);
-    else this.play('duck-idle', true);
 
     this.updateAttackHitbox();
-
-    if (this.isInvulnerable) {
-      this.setAlpha(Math.sin(now / 40) > 0 ? 0.4 : 0.9);
-    } else if (!dashing) {
-      this.setAlpha(1);
-    }
+    this.applyVisual(now, onGround, moving && !dashing, dashing, body.velocity.y);
   }
 
-  private landSquash(): void {
-    this.scene.tweens.add({
-      targets: this,
-      scaleY: 0.78,
-      scaleX: 1.18,
-      duration: 70,
-      yoyo: true,
-      ease: 'Quad.easeOut',
-      onComplete: () => this.setScale(1),
-    });
-    const dust = this.scene.add.particles(this.x, this.y + 18, 'particle', {
+  // State-driven squash & stretch on the single hero sprite — gives each
+  // action (idle breath, walk bob, jump stretch, attack thrust) its own
+  // distinct motion without needing separate drawn frames. Scale/angle are
+  // cosmetic only; the Arcade body keeps its fixed size.
+  private applyVisual(
+    now: number,
+    onGround: boolean,
+    walking: boolean,
+    dashing: boolean,
+    vy: number,
+  ): void {
+    const t = now / 1000;
+    let sx = 1;
+    let sy = 1;
+    let ang = 0;
+
+    if (this.isAttacking) {
+      const k = Math.sin((1 - (this.attackingUntil - now) / ATTACK_DURATION) * Math.PI);
+      sx = 1 + 0.14 * k; // thrust forward
+      sy = 1 - 0.1 * k;
+      ang = 12 * k * this.facing;
+    } else if (dashing) {
+      sx = 1.18;
+      sy = 0.86;
+    } else if (!onGround) {
+      if (vy < -40) {
+        sy = 1.14; // rising: stretch up
+        sx = 0.9;
+      } else if (vy > 140) {
+        sy = 1.08; // falling
+        sx = 0.94;
+      } else {
+        sy = 1.04; // apex
+        sx = 0.98;
+      }
+    } else if (walking) {
+      const b = Math.abs(Math.sin(t * 16));
+      sy = 1 + 0.05 * b;
+      sx = 1 - 0.03 * b;
+      ang = 4 * Math.sin(t * 16);
+    } else {
+      const b = Math.sin(t * 2.4); // idle breathing
+      sy = 1 + 0.025 * b;
+      sx = 1 - 0.018 * b;
+      ang = 1.2 * Math.sin(t * 1.5);
+    }
+
+    // Landing impact overlay
+    if (now < this.landSquashUntil) {
+      const k = (this.landSquashUntil - now) / 130;
+      sy *= 1 - 0.22 * k;
+      sx *= 1 + 0.2 * k;
+    }
+
+    this.setScale(sx, sy);
+    this.setAngle(ang);
+
+    if (dashing) this.setAlpha(0.6);
+    else if (this.isInvulnerable) this.setAlpha(Math.sin(now / 40) > 0 ? 0.4 : 0.9);
+    else this.setAlpha(1);
+  }
+
+  private landImpact(): void {
+    this.landSquashUntil = this.scene.time.now + 130;
+    const dust = this.scene.add.particles(this.x, this.y + 44, 'particle', {
       speed: { min: 30, max: 90 },
       angle: { min: 200, max: 340 },
       lifespan: 350,
@@ -212,27 +254,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     });
     dust.explode(6);
     this.scene.time.delayedCall(400, () => dust.destroy());
-  }
-
-  private jumpStretch(): void {
-    this.scene.tweens.add({
-      targets: this,
-      scaleY: 1.18,
-      scaleX: 0.85,
-      duration: 90,
-      yoyo: true,
-      ease: 'Quad.easeOut',
-      onComplete: () => this.setScale(1),
-    });
-  }
-
-  private attackLunge(): void {
-    this.scene.tweens.add({
-      targets: this,
-      x: this.x + 10 * this.facing,
-      duration: 80,
-      ease: 'Quad.easeOut',
-    });
   }
 
   private spawnDashGhost(): void {

@@ -39,7 +39,7 @@ export class MainMenuScene extends Phaser.Scene {
     this.add.image(0, 0, 'vignette').setOrigin(0, 0).setDepth(8);
 
     // Hero duck above the title
-    const duck = this.add.image(cx, GAME_HEIGHT * 0.27, 'duck-idle-0').setScale(1.6).setDepth(10);
+    const duck = this.add.image(cx, GAME_HEIGHT * 0.24, 'duck-hero').setScale(1.15).setDepth(10);
     this.tweens.add({
       targets: duck,
       y: GAME_HEIGHT * 0.27 - 10,
