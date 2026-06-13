@@ -37,9 +37,9 @@ export class BootScene extends Phaser.Scene {
 
     // Atmosphere (parallax + post)
     paintSky(this, GAME_WIDTH, GAME_HEIGHT);
-    paintForestLayer(this, 'forest-far', 11, '#101a2e', 430, 14, 1.3);
-    paintForestLayer(this, 'forest-mid', 23, '#15233d', 470, 12, 1.0);
-    paintForestLayer(this, 'forest-near', 37, '#0d1626', 510, 9, 0.8);
+    paintForestLayer(this, 'forest-far', 11, '#0c1320', 430, 14, 1.3);
+    paintForestLayer(this, 'forest-mid', 23, '#0d1626', 470, 12, 1.0);
+    paintForestLayer(this, 'forest-near', 37, '#070b13', 510, 9, 0.8);
     paintFog(this);
     paintGodray(this);
     paintVignette(this, GAME_WIDTH, GAME_HEIGHT);

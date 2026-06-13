@@ -11,9 +11,11 @@
 
 ## 2. Tono e stile
 
-- Atmosfera malinconica e gotica, ma con ironia: il protagonista è pur sempre un'anatra
-- Palette scura (blu notte, viola) con accenti caldi (piume dorate, becco arancione)
-- Silhouette in parallasse, luce volumetrica, particelle di spore/polline
+- Atmosfera malinconica e gotica alla **Hollow Knight**: cupa, desaturata, inquietante
+- Palette fredda e scura (nero carbone, navy, grigio cenere) con accenti di luce fredda (occhi/spettri ciano)
+- Il protagonista è un'anatra incappucciata dal volto pallido e occhi luminosi, con un piccolo nail-sword
+- Silhouette in parallasse, luce volumetrica, nebbia, particelle di spore
+- Concept art di riferimento (Higgsfield): `docs/concept/` — versione Ori (calda) e versione dark Hollow Knight (scelta definitiva)
 
 ## 3. Protagonista
 

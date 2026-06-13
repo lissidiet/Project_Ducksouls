@@ -20,131 +20,131 @@ interface DuckPose {
 }
 
 function drawDuck(ctx: CanvasRenderingContext2D, pose: DuckPose): void {
-  const bodyX = 34;
-  const bodyY = 36;
+  const bodyX = 33;
+  const bodyY = 38;
 
-  // Faint spirit aura behind everything (the "Ori glow")
-  radialGlow(ctx, bodyX + 6, bodyY - 4, 34, '#9fe8ff', 0.14);
+  // Faint cold spirit aura (Hollow Knight ghost-light, not Ori warmth)
+  radialGlow(ctx, bodyX + 10, bodyY - 6, 30, '#6fa8cc', 0.12);
 
-  // Legs + webbed feet (behind body)
-  ctx.strokeStyle = '#c97f2e';
+  // Thin pale legs + feet (ash grey, not warm orange)
+  ctx.strokeStyle = '#7d7d86';
   ctx.lineWidth = 3;
   ctx.lineCap = 'round';
-  const footY = 56 - pose.legLift;
+  const footY = 58 - pose.legLift;
   for (const [hipX, off] of [
-    [bodyX - 4, pose.legB],
-    [bodyX + 6, pose.legA],
+    [bodyX - 3, pose.legB],
+    [bodyX + 7, pose.legA],
   ] as Array<[number, number]>) {
     ctx.beginPath();
-    ctx.moveTo(hipX, bodyY + 10);
+    ctx.moveTo(hipX, bodyY + 11);
     ctx.lineTo(hipX + off, footY);
     ctx.stroke();
-    softEllipse(ctx, hipX + off + 3, footY, 6, 2.6, '#e8923a');
+    softEllipse(ctx, hipX + off + 3, footY, 5.5, 2.3, '#b6afa0');
   }
 
-  // Tail feathers
-  ctx.fillStyle = '#e6d7b4';
+  // Nail-sword carried low behind the body
+  ctx.save();
+  ctx.strokeStyle = withAlpha('#cdd8e0', 0.9);
+  ctx.lineWidth = 2;
+  ctx.shadowBlur = 4;
+  ctx.shadowColor = '#9fd8e8';
   ctx.beginPath();
-  ctx.moveTo(bodyX - 14, bodyY - 2);
-  ctx.quadraticCurveTo(bodyX - 28, bodyY - 12, bodyX - 24, bodyY + 2);
-  ctx.quadraticCurveTo(bodyX - 20, bodyY + 8, bodyX - 12, bodyY + 6);
-  ctx.closePath();
-  ctx.fill();
+  ctx.moveTo(bodyX - 9, bodyY + 4);
+  ctx.lineTo(bodyX - 25, bodyY + 17);
+  ctx.stroke();
+  ctx.restore();
 
-  // Body — cream with soft top light and warm under-shadow
+  // Cloaked body — deep charcoal with cold under-shadow
   softEllipse(
     ctx,
     bodyX,
     bodyY,
-    19,
-    14,
-    verticalGradient(ctx, bodyX, bodyY - 14, bodyY + 14, [
-      [0, '#fdf3da'],
-      [0.55, '#f2e6c9'],
-      [1, '#cdb38c'],
+    20,
+    16,
+    verticalGradient(ctx, bodyX, bodyY - 16, bodyY + 16, [
+      [0, '#26262f'],
+      [0.5, '#191921'],
+      [1, '#0f0f15'],
     ]),
+    6,
+    'rgba(6,8,14,0.6)',
   );
 
-  // Wing
+  // Cloak fold / wing hint
   ctx.save();
-  ctx.translate(bodyX - 2, bodyY + 1);
-  ctx.rotate(-pose.wingLift * 0.7);
+  ctx.translate(bodyX - 1, bodyY + 1);
+  ctx.rotate(-pose.wingLift * 0.6);
   softEllipse(
     ctx,
     0,
     0,
-    11,
-    7.5,
-    verticalGradient(ctx, 0, -8, 8, [
-      [0, '#e9d9b4'],
-      [1, '#c9b48d'],
+    12,
+    9,
+    verticalGradient(ctx, 0, -9, 9, [
+      [0, '#2a2a36'],
+      [1, '#13131b'],
     ]),
   );
   ctx.restore();
 
-  // Head
+  // Pale bone-white face peeking from the hood
   softEllipse(
     ctx,
-    48,
-    20,
-    10.5,
+    50,
+    23,
     10,
-    verticalGradient(ctx, 48, 10, 30, [
-      [0, '#fdf3da'],
-      [1, '#e8d9b6'],
+    10.5,
+    verticalGradient(ctx, 50, 13, 33, [
+      [0, '#edebe1'],
+      [1, '#c8c3b4'],
     ]),
   );
 
-  // Beak
-  ctx.fillStyle = '#e8923a';
-  ctx.beginPath();
-  ctx.moveTo(56, 17);
-  ctx.quadraticCurveTo(70, 19, 57, 24);
-  ctx.quadraticCurveTo(54, 21, 56, 17);
-  ctx.closePath();
-  ctx.fill();
-
-  // Knight cloak — indigo, sweeping from head over the back, teal rim light
-  const cloak = verticalGradient(ctx, 30, 6, 44, [
-    [0, '#2e2e52'],
-    [0.6, '#23233a'],
-    [1, '#1a1a2e'],
+  // Dark hood framing the top and back of the head
+  ctx.fillStyle = verticalGradient(ctx, 46, 3, 30, [
+    [0, '#262631'],
+    [1, '#111119'],
   ]);
-  ctx.fillStyle = cloak;
   ctx.beginPath();
-  ctx.moveTo(44, 8);
-  ctx.quadraticCurveTo(52, 6, 55, 13); // hood crest over the head
-  ctx.quadraticCurveTo(50, 12, 46, 15);
-  ctx.quadraticCurveTo(34, 16, 26, 26);
-  ctx.quadraticCurveTo(16, 36, 20, 46);
-  ctx.quadraticCurveTo(28, 50, 36, 48);
-  ctx.quadraticCurveTo(24, 42, 28, 30);
-  ctx.quadraticCurveTo(34, 18, 44, 8);
+  ctx.moveTo(61, 19);
+  ctx.quadraticCurveTo(64, 3, 47, 2);
+  ctx.quadraticCurveTo(31, 4, 32, 28);
+  ctx.quadraticCurveTo(39, 26, 42, 24);
+  ctx.quadraticCurveTo(41, 15, 47, 12);
+  ctx.quadraticCurveTo(53, 9, 57, 14);
+  ctx.quadraticCurveTo(60, 16, 61, 19);
   ctx.closePath();
   ctx.fill();
 
-  // Rim light on the cloak edge
+  // Two large empty glowing eyes — the signature
+  for (const ex of [47, 54]) {
+    radialGlow(ctx, ex, 22, 6.5, '#bfeaff', 0.85);
+    ctx.fillStyle = '#f2fbff';
+    ctx.beginPath();
+    ctx.ellipse(ex, 22, 2.4, 3.3, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Small muted beak
+  ctx.fillStyle = '#bda57f';
+  ctx.beginPath();
+  ctx.moveTo(58, 24);
+  ctx.quadraticCurveTo(68, 26, 58, 29);
+  ctx.quadraticCurveTo(56, 26.5, 58, 24);
+  ctx.closePath();
+  ctx.fill();
+
+  // Cold rim light along the hood edge
   ctx.save();
-  ctx.strokeStyle = withAlpha('#7fd4e8', 0.65);
-  ctx.lineWidth = 1.6;
+  ctx.strokeStyle = withAlpha('#7fd4e8', 0.5);
+  ctx.lineWidth = 1.4;
   ctx.shadowBlur = 4;
   ctx.shadowColor = '#7fd4e8';
   ctx.beginPath();
-  ctx.moveTo(44, 8);
-  ctx.quadraticCurveTo(30, 18, 26, 30);
-  ctx.quadraticCurveTo(23, 39, 22, 45);
+  ctx.moveTo(47, 2);
+  ctx.quadraticCurveTo(31, 4, 32, 28);
   ctx.stroke();
   ctx.restore();
-
-  // Eye with glint
-  ctx.fillStyle = '#141420';
-  ctx.beginPath();
-  ctx.arc(51, 18, 2.4, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = 'rgba(255,255,255,0.9)';
-  ctx.beginPath();
-  ctx.arc(51.9, 17.2, 0.9, 0, Math.PI * 2);
-  ctx.fill();
 }
 
 export function paintDuckFrames(scene: Phaser.Scene): void {
@@ -277,19 +277,19 @@ export function paintFrog(scene: Phaser.Scene): void {
 export function paintPlatform(scene: Phaser.Scene): void {
   paintTexture(scene, 'platform', 64, 64, (ctx, w, h) => {
     ctx.fillStyle = verticalGradient(ctx, 0, 0, h, [
-      [0, '#3c3c58'],
-      [0.4, '#2c2c42'],
-      [1, '#1d1d2c'],
+      [0, '#26283a'],
+      [0.4, '#1a1b29'],
+      [1, '#0d0e16'],
     ]);
     ctx.fillRect(0, 0, w, h);
-    // Mossy top
-    ctx.fillStyle = verticalGradient(ctx, 0, 0, 14, [
-      [0, withAlpha('#5f8f5c', 0.95)],
-      [1, withAlpha('#5f8f5c', 0)],
+    // Faint cold haze just under the top edge
+    ctx.fillStyle = verticalGradient(ctx, 0, 0, 16, [
+      [0, withAlpha('#3a5566', 0.6)],
+      [1, withAlpha('#3a5566', 0)],
     ]);
-    ctx.fillRect(0, 0, w, 14);
-    // Cool top-edge light
-    ctx.fillStyle = withAlpha('#aee3d8', 0.5);
+    ctx.fillRect(0, 0, w, 16);
+    // Cool pale top-edge light
+    ctx.fillStyle = withAlpha('#9fc8d4', 0.55);
     ctx.fillRect(0, 0, w, 2);
     // Cracks
     const rnd = seededRandom(7);
@@ -384,16 +384,16 @@ export function paintSlash(scene: Phaser.Scene): void {
 export function paintSky(scene: Phaser.Scene, w: number, h: number): void {
   paintTexture(scene, 'sky', w, h, (ctx) => {
     ctx.fillStyle = verticalGradient(ctx, 0, 0, h, [
-      [0, '#080b1c'],
-      [0.45, '#101a33'],
-      [0.8, '#1a2c47'],
-      [1, '#234055'],
+      [0, '#05060f'],
+      [0.45, '#0a1020'],
+      [0.8, '#101a2b'],
+      [1, '#172636'],
     ]);
     ctx.fillRect(0, 0, w, h);
-    // Pale moon with wide halo
-    radialGlow(ctx, w * 0.72, h * 0.2, 150, '#9fd8e8', 0.22);
-    radialGlow(ctx, w * 0.72, h * 0.2, 42, '#d8f3f8', 0.8);
-    ctx.fillStyle = '#eefaff';
+    // Pale cold moon with wide halo
+    radialGlow(ctx, w * 0.72, h * 0.2, 150, '#7fb0c8', 0.2);
+    radialGlow(ctx, w * 0.72, h * 0.2, 42, '#c4dce4', 0.7);
+    ctx.fillStyle = '#dfeef2';
     ctx.beginPath();
     ctx.arc(w * 0.72, h * 0.2, 20, 0, Math.PI * 2);
     ctx.fill();
