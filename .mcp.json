@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "higgsfield": {
+    "higgsfield2": {
       "type": "http",
       "url": "https://mcp.higgsfield.ai/mcp"
     }
