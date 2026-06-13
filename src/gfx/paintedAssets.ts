@@ -214,41 +214,41 @@ function drawFrog(ctx: CanvasRenderingContext2D, jumping: boolean): void {
     21,
     14,
     verticalGradient(ctx, 30, baseY - 14, baseY + 14, [
-      [0, '#5d8f4c'],
-      [0.6, '#3f6b35'],
-      [1, '#2c4d26'],
+      [0, '#34452c'],
+      [0.6, '#23301d'],
+      [1, '#161e12'],
     ]),
     6,
-    'rgba(20,40,18,0.7)',
+    'rgba(8,14,8,0.7)',
   );
   // Belly
-  softEllipse(ctx, 30, baseY + 6, 13, 6, withAlpha('#9cc24a', 0.5));
-  // Spikes with glowing tips
+  softEllipse(ctx, 30, baseY + 6, 13, 6, withAlpha('#5c7440', 0.45));
+  // Spikes with cold glowing tips
   for (const [sx, sh] of [
     [18, 12],
     [28, 15],
     [38, 12],
   ] as Array<[number, number]>) {
-    ctx.fillStyle = '#9cc24a';
+    ctx.fillStyle = '#5c7440';
     ctx.beginPath();
     ctx.moveTo(sx - 4, baseY - 10);
     ctx.lineTo(sx, baseY - 10 - sh);
     ctx.lineTo(sx + 4, baseY - 9);
     ctx.closePath();
     ctx.fill();
-    radialGlow(ctx, sx, baseY - 10 - sh, 4, '#d3f17e', 0.8);
+    radialGlow(ctx, sx, baseY - 10 - sh, 4, '#9fd86e', 0.6);
   }
-  // Eyes
+  // Eyes — cold hostile glow
   for (const ex of [14, 46]) {
-    softEllipse(ctx, ex, baseY - 8, 4.5, 4.5, '#2c4d26');
-    radialGlow(ctx, ex, baseY - 8, 5, '#ff5a40', 0.8);
-    ctx.fillStyle = '#ffd2c2';
+    softEllipse(ctx, ex, baseY - 8, 4.5, 4.5, '#161e12');
+    radialGlow(ctx, ex, baseY - 8, 5, '#d65a40', 0.75);
+    ctx.fillStyle = '#ffcdbe';
     ctx.beginPath();
     ctx.arc(ex, baseY - 8, 1.5, 0, Math.PI * 2);
     ctx.fill();
   }
   // Legs
-  ctx.strokeStyle = '#2c4d26';
+  ctx.strokeStyle = '#161e12';
   ctx.lineWidth = 4;
   ctx.lineCap = 'round';
   if (jumping) {

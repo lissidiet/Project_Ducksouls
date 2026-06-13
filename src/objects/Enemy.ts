@@ -2,18 +2,21 @@ import { BaseEnemy } from './BaseEnemy';
 
 const PATROL_SPEED = 70;
 
-// "Ombra" — a patrolling shade blob. Turns around at walls and edges.
+// "Ombra" — a patrolling shade wraith. Turns around at walls and edges,
+// with a gentle hovering sway. Uses the Higgsfield 'shade' sprite.
 export class Enemy extends BaseEnemy {
   private dir: 1 | -1 = 1;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, 'shade-0', 2, 3);
-    this.setSize(40, 34).setOffset(12, 9);
-    this.play('shade-float');
+    super(scene, x, y, 'shade', 2, 3);
+    this.setSize(34, 50).setOffset(7, 8);
   }
 
   update(): void {
-    if (!this.active || this.despawnIfFallen() || this.stunned) return;
+    if (!this.active || this.despawnIfFallen() || this.stunned) {
+      this.setAngle(0);
+      return;
+    }
     const body = this.body as Phaser.Physics.Arcade.Body;
 
     if (body.blocked.left) this.dir = 1;
@@ -28,5 +31,9 @@ export class Enemy extends BaseEnemy {
 
     this.setVelocityX(PATROL_SPEED * this.dir);
     this.setFlipX(this.dir < 0);
+
+    // Cosmetic hovering sway (wraith drifting)
+    const t = this.scene.time.now / 1000;
+    this.setAngle(4 * Math.sin(t * 2.2));
   }
 }

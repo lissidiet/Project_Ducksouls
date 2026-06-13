@@ -1,7 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from '../main';
 import {
-  paintShade,
   paintFrog,
   paintPlatform,
   paintBench,
@@ -14,9 +13,9 @@ import {
   paintVignette,
 } from '../gfx/paintedAssets';
 
-// Loads binary art assets (the Higgsfield-made hero sprite) and paints the
-// remaining textures at runtime onto HTML5 canvases (atmosphere, enemies,
-// world). The hero is real AI art; everything else is still procedural.
+// Loads binary art assets (the Higgsfield-made hero + shade sprites) and
+// paints the remaining textures at runtime onto HTML5 canvases (atmosphere,
+// frog, world). Characters are real AI art; the world is still procedural.
 export class BootScene extends Phaser.Scene {
   constructor() {
     super('Boot');
@@ -24,11 +23,11 @@ export class BootScene extends Phaser.Scene {
 
   preload(): void {
     this.load.image('duck-hero', 'assets/duck-hero.png');
+    this.load.image('shade', 'assets/shade.png');
   }
 
   create(): void {
     // Characters
-    paintShade(this);
     paintFrog(this);
 
     // World & objects
@@ -51,12 +50,7 @@ export class BootScene extends Phaser.Scene {
     this.makeCircle('touch-btn', 42, 0xffffff);
     this.makeParticleTexture();
 
-    this.createAnimations();
     this.scene.start('MainMenu');
-  }
-
-  private createAnimations(): void {
-    this.anims.create({ key: 'shade-float', frames: [{ key: 'shade-0' }], frameRate: 1 });
   }
 
   private makeRect(key: string, w: number, h: number, fill: number): void {
