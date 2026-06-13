@@ -1,35 +1,29 @@
 import Phaser from 'phaser';
-import { BootScene } from './scenes/BootScene';
-import { MainMenuScene } from './scenes/MainMenuScene';
-import { IslandScene } from './scenes/IslandScene';
-import { TopDownHUDScene } from './scenes/TopDownHUDScene';
-import { GameOverScene } from './scenes/GameOverScene';
+import { GAME_WIDTH, GAME_HEIGHT } from './core';
+import { Boot } from './scenes/Boot';
+import { Title } from './scenes/Title';
+import { World } from './scenes/World';
+import { Hud } from './scenes/Hud';
+import { GameOver } from './scenes/GameOver';
 
-export const GAME_WIDTH = 960;
-export const GAME_HEIGHT = 540;
+export { GAME_WIDTH, GAME_HEIGHT } from './core';
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   width: GAME_WIDTH,
   height: GAME_HEIGHT,
   parent: 'game-container',
-  backgroundColor: '#080b1c',
-  // Painterly art — keep texture smoothing ON (no pixelArt/roundPixels)
+  backgroundColor: '#05080a',
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  input: {
-    activePointers: 4,
-  },
+  input: { activePointers: 4 },
   physics: {
     default: 'arcade',
-    arcade: {
-      gravity: { x: 0, y: 0 }, // top-down: no gravity
-      debug: false,
-    },
+    arcade: { gravity: { x: 0, y: 0 }, debug: false },
   },
-  scene: [BootScene, MainMenuScene, IslandScene, TopDownHUDScene, GameOverScene],
+  scene: [Boot, Title, World, Hud, GameOver],
 };
 
 export default new Phaser.Game(config);
